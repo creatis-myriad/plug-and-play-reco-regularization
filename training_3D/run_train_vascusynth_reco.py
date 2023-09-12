@@ -9,8 +9,8 @@ import argparse
 import random
 from glob import glob
 from monai.data.utils import partition_dataset
-from monai.data import Dataset, DataLoader, write_nifti, CacheDataset
-from personnal_transforms import PrecisionLoss, PonderatedDiceloss
+from monai.data import DataLoader, write_nifti, CacheDataset
+from personnal_transforms import PonderatedDiceloss
 from torchsummary import summary
 from monai.inferers import sliding_window_inference
 from monai.transforms import (

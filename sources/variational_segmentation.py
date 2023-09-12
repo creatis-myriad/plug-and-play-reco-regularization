@@ -1,5 +1,4 @@
 import numpy as np
-from sources import image_utils
 import torch
 from monai.inferers import sliding_window_inference
 import math
@@ -106,15 +105,6 @@ def proxg(u, chan_weight, gamma):
     prox_norm = (1 - (gamma*chan_weight / np.maximum(norm, gamma*chan_weight)))*u
     return prox_norm
 
-## version PESQUET
-# def proxg(x, chan_weight, tau):
-#     vx = x[:int(x.shape[0]/2)]
-#     vy = x[int(x.shape[0]/2):]
-#     xx = np.sqrt(vx*vx + vy*vy)
-#     xx = np.maximum(0, 1 - tau*chan_weight/ xx)
-#     xx = np.tile(xx, 2)
-#     p = x * xx
-#     return p
 
 def monai_predict_image(image, model, roi_size, sw_batch_size = 5, mode = "gaussian", overlap = 0.5, device="cpu"):
     image = torch.from_numpy(image)

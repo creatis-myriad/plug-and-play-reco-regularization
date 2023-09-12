@@ -1,31 +1,15 @@
 import numpy as np
-import sources.grad_div_interpolation_3d as grd3D
-from sources import image_utils
-import matplotlib.pyplot as plt
 from monai.data import Dataset, DataLoader, write_nifti
-from sources.affichage_3D import multi_slice_viewer
-from sources.variational_segmentation_3D import primal_dual_ind_chan_tv_3D
-import scipy
-from scipy import ndimage
-import skimage
-from skimage import morphology
-import torch
+from skimage import morphology, filters
 from glob import glob
 import os
 from monai.transforms import (
-    Activations,
     Compose,
     LoadImaged,
     Orientationd,
-    RandFlipd,
-    RandRotate90d,
-    RandSpatialCropSamplesd,
     ToTensord,
     ScaleIntensityd,
     MaskIntensityd,
-    DeleteItemsd,
-    AddChanneld,
-    CenterSpatialCropd,
     AddChanneld,
 )
 
@@ -67,10 +51,10 @@ for batch_data in check_loader:
     inputs = (inputs*255).astype(np.uint8)
 
     ball = morphology.ball(median_size)
-    background = skimage.filters.median(inputs, ball)
+    background = filters.median(inputs, ball)
     background = inputs.astype(np.int16) - background
     background[background < 0] = 0
-    masks = skimage.morphology.binary_erosion(masks, morphology.ball(4))
+    masks = morphology.binary_erosion(masks, morphology.ball(4))
 
     image_pre_processed = background * masks
     write_nifti(data = inputs, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] + "/inputs.nii.gz", resample = False)
@@ -78,6 +62,5 @@ for batch_data in check_loader:
     write_nifti(data = image_pre_processed, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] + "/preprocessed.nii.gz", resample = False)
     write_nifti(data = labels, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] +"/labels.nii.gz", resample = False)
     i = i + 1
-    # write_nifti(data = labels.detach().cpu().squeeze().numpy(), file_name ="test_pretreatement/labels.nii.gz", resample = True)
 
 

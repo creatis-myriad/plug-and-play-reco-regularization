@@ -25,7 +25,7 @@ class BinaryDeconnect(MapTransform):
     def __call__(self, data):
         d = dict(data)
         for key in self.keys:
-            d[key],__ = createDisconnections(d[key], self.nb_deco, self.taille_max)
+            d[key],__ = create_disconnections(d[key], self.nb_deco, self.taille_max)
         return d
 
 class AddArtefacts(MapTransform):
@@ -60,11 +60,15 @@ class AddArtefacts(MapTransform):
 
 def disc(img, x, y, pixel_radius):
     '''
-    :param img: image ou on doit ajouter un disque
-    :param x: coordonnee x du centre du disque a ajouter
-    :param y: coordonnee y du centre du disque a ajouter
-    :param pixel_radius: rayon du disque
-    :return: l'image avec un disque dedans au coordonnees x, y de rayon pixel_radius
+    Add a binary disc at the coordinates (x, y) with a radius of ixel_radius to an image.
+    INPUTS :
+    -  img: image where we add a disc
+    -  x: coordinate x of the center of the disc in pixel
+    -  y: coordinate y of the center of the disc in pixel
+    -  pixel_radius: radius of the disc
+
+    OUTPUT
+    - img: binary image with disc added composed of 1
     '''
     for i in range(x - pixel_radius, x + pixel_radius + 1):
         r = int(np.sqrt(pixel_radius ** 2 - (i - x) ** 2))
@@ -73,70 +77,82 @@ def disc(img, x, y, pixel_radius):
                 img[i, j] = 1
     return img
 
-def createDisconnections(groundTruth, nb_disconnection,  taille_max):
-    # taille_max = 17 # 12 initialement
+def create_disconnections(groundtruth, nb_disconnection, max_size):
+    """
+    Create disconnections on a binary image
+    INPUTS:
+        - groundtruth : binary volume with curvilinear structures to disconnect
+        - nb_disconnection : number to disconnections applied on the curvilinear structure
+        - max_size : maximum size applied to disconnect
+
+    OUTPUTS:
+        - image : image with disconnected curvilinear structures
+        - disconnections : locations of the disconnections
+    """
+
     urnes = []
-    distance_map = distance_transform_bf(groundTruth, 'chessboard')
-    skelet = skeletonize(groundTruth)
+    distance_map = distance_transform_bf(groundtruth, 'chessboard')
+    skelet = skeletonize(groundtruth)
 
-    # calcul des rayons des vaisseaux
+    # compute radius of curvilinear structures
     distance_map = skelet*distance_map
-
-    # calcul du rayon des vaisseaux  /!\ les rayons des nombres impaire et paires qui se suivent sont le meme
     vaisseau_max = np.unique(distance_map)
 
-    # recuperation des coordonnées selon le rayon du vaisseau
+    # sort coordinates of the curvilinear structure centerlines depending on the radius of the curvilinear structures
     for i in vaisseau_max[1:]:
         coords_i = np.nonzero(distance_map == i)
         if len(coords_i)!=0:
             urnes.append(np.stack(coords_i, axis=-1))
 
-    # on prend les vaisseaux les plus fins ( de tailles 1 2 et 3 apparemment)
+    # selection of the thinnest structures
     urnes = urnes[:3]
     nb_urnes= len(urnes)
     proba_urnes = []
     proba_urnes.append(0)
 
-    # calcul proba des urnes selon le nombre de type de vaisseau
+    # definition of the probability to disconnect the thinnest structures
     for i in range(nb_urnes):
         last = proba_urnes[-1]
         prob_cum = last+(2**(nb_urnes-(i+1)))/((2**nb_urnes)-1)
         proba_urnes.append(prob_cum)
 
-    # tirage au sort des types de vaisseaux déconnectés
+    # draw the curvilinear structures size to disconnect
     tirage_urnes = np.random.rand(nb_disconnection)
-    image = groundTruth
+    image = groundtruth
 
-    #initialisation des deconnections
+    #initialisation of the disconnections
     disconnections = np.zeros(image.shape)
 
-    # creation de chaque tache (chaque tache est differente)
+    # creation of each disconnection (each disconnection is different)
     for i in range(len(proba_urnes)-1):
-        # calcul du nombre de taches pour chaque categorie de l'urne
+        # compute the number of disconnections for each kind of radius of structure
         categorie = (tirage_urnes > proba_urnes[i]) * (tirage_urnes <= proba_urnes[i + 1]) * 1
         nombre_tirage_urne = np.sum(categorie)
 
-        # tirage aux sort des coordonnées ou sont situés les deconnexions
+        # draw coordinates where disconnections happened
         point_disconnect = np.random.randint(len(urnes[i]), size=nombre_tirage_urne)
         disconnect = np.zeros(image.shape)
 
-        #creation de chaque tache de la ieme categorie
+        #compute each disconnection of the i-th category
         for j in point_disconnect:
-            #taille du vaisseau au niveau de la deconnexion
+            #size of the curvilinear structures at the disconnection point
             taille_vaisseau = vaisseau_max[i+1]
 
-            #calcul de la taille de la deconexion moyenne (pourquoi ca je sais plus)
-            taille_deco_mean = taille_max // taille_vaisseau
+            #compute the size of the mean disconnection
+            taille_deco_mean = max_size // taille_vaisseau
             taille_disk = abs(int(np.random.normal(taille_deco_mean, scale=4)))
 
             nb_pix_max = np.sum(disk(taille_disk))
 
+            # kind of disconnections
             dense = np.random.randint(0, 2)
             if dense == 1:
-                nb_pix = abs(int(np.random.normal(nb_pix_max // 2, scale=nb_pix_max//4))) # * 20 initialement
+                nb_pix = abs(int(np.random.normal(nb_pix_max // 2, scale=nb_pix_max//4)))
             else:
-                nb_pix = abs(int(np.random.normal(nb_pix_max // 4, scale=nb_pix_max//8))) # * 10 initialement
-            tache = create_tache_2(disconnect, urnes[i][j][0], urnes[i][j][1],taille_disk, nb_pix, 1, 0.8)
+                nb_pix = abs(int(np.random.normal(nb_pix_max // 4, scale=nb_pix_max//8)))
+
+            #creation of the disconnection
+            tache = create_tache(disconnect, urnes[i][j][0], urnes[i][j][1], taille_disk, nb_pix, 1, 0.8)
             disconnect = disconnect + tache
         image = image - disconnect
         disconnections = disconnections + disconnect
@@ -145,81 +161,110 @@ def createDisconnections(groundTruth, nb_disconnection,  taille_max):
     return image, disconnections
 
 
-def create_tache_2(disconnect, pos_x, pos_y, taille_disk, mean_pix, std_pix, std_gauss = 0.7):
+def create_tache(disconnect, pos_x, pos_y, size_disk, mean_pix, std_pix, std_gauss = 0.7):
+    """
+       Create a disconnection on a binary image
+       INPUTS:
+           - disconnect : image that contains disconnections
+           - pos_x : position x of the future disconnetion
+           - pos_y : position y of the future disconnetion
+           - size_disk : size of the disconnection possible
+           - mean_pix : mean of the number of pixels that we want to disconnect
+           - std_pix : Standard deviation the number of pixels that we want to disconnect
+           - std_gauss : gaussian smoothness
 
-    # creation dune image pour avoir le mask de la tache
+       OUTPUTS:
+           - disconnection :
+       """
+
+    # creation of an image with the mask of the disconnection
     image = np.zeros(disconnect.shape)
-    image = disc(image, pos_x, pos_y, taille_disk)
-    #recuperation des coordonnees de la tache possible (un disk)
+    image = disc(image, pos_x, pos_y, size_disk)
+    #coordinates possible inside the mask
     coords_1 = np.nonzero(image == 1)
 
-    #calcul du nombre de pixel qu'on va niquer
+    # compute the number of pixel that composed the disconnection
     nombre_pixels = int(np.random.normal(mean_pix, scale=std_pix))
-
-    # au cas ou on a un nombre negatif .. on sait jamais tahu
     if nombre_pixels <= 0:
         nombre_pixels =1
-
-    #calcul des position des pixels a niquer
     if nombre_pixels < len(coords_1[0]):
         pos_aleatoire_1 = np.random.randint(len(coords_1[0]), size=nombre_pixels)
-        tache = np.zeros(image.shape)
-        tache[coords_1[0][pos_aleatoire_1], coords_1[1][pos_aleatoire_1]] = 1
+        disconnection = np.zeros(image.shape)
+        disconnection[coords_1[0][pos_aleatoire_1], coords_1[1][pos_aleatoire_1]] = 1
     else :
-        tache = np.zeros(image.shape)
-        tache[coords_1[0], coords_1[1]] = 1
-    tache = (gaussian(tache, sigma = std_gauss) >0.4) * 1.0
-    return tache
+        disconnection = np.zeros(image.shape)
+        disconnection[coords_1[0], coords_1[1]] = 1
+    disconnection = (gaussian(disconnection, sigma = std_gauss) >0.4) * 1.0
+
+    return disconnection
 
 
 
 def create_mapTaches(image, mask, mean_taches, std_taches):
+    """
+       Create a map of artefact avoiding the curvilinear structure. The number of artefact created follow a normal law with a mean
+       of mean_taches and a standard deviation of std_taches
+       INPUTS:
+           - image : image to add artefacts
+           - mask : mask of the curvilinear structure where no artefact must be adding
+           - mean_taches : mean number of artefact to add
+           - std_taches : standard deviation used to draw the number of artefact to create
 
-    #creation du mask d'artefacts a retourner
+       OUTPUTS:
+           - taches : map of artefact
+       """
+
+
     taches = np.zeros(image.shape)
 
-    #tirage au sort du nombre d'artefacts
+    #draw the number of artefacts to create
     nombre_taches = -1
     while nombre_taches < 1:
         nombre_taches = int(np.random.normal(mean_taches, scale=std_taches))
 
-    # on rajoute des artefacts autour des vaisseaux mais pas dessus et a linterieur du fond de retine
-    zones_to_taches = (binary_dilation(image, disk(2))<0.5)*1.0
-    zones_to_taches = zones_to_taches*mask
+    # add artefacts around curvilinear structures
+    zones_to_taches = (binary_dilation(image, disk(2)) < 0.5) * 1.0
+    zones_to_taches = zones_to_taches * mask
 
-    #coordonnees possibles ou on peut tacher
+    #coordinates where we can put artefacts
     coord_to_tache = np.nonzero(zones_to_taches)
     coord_to_tache = np.stack(coord_to_tache, axis = -1)
 
-    # tailles des artefacts que l'on va faire tiré au sort
+    # size of artefacts drawn
     taille_disk = np.random.normal(3, scale=1, size = nombre_taches).tolist()
     taille_disk = [int(i) for i in taille_disk]
 
-    #parcours de chaque artefact
+    #for each artefact
     for i in taille_disk:
-        #tirage au sort de la coordonnee ou creer l'artefact
+        # draw the coordinate
         num_pix_to_tache = np.random.randint(len(coord_to_tache))
         coord_tache = coord_to_tache[num_pix_to_tache]
 
-        #creation de l'artefact
+        #create artefact
         nb_pix_max = np.sum(disk(i))
-        tache = create_tache_2(image, coord_tache[0], coord_tache[1], i, nb_pix_max//4, nb_pix_max//8)
+        tache = create_tache(image, coord_tache[0], coord_tache[1], i, nb_pix_max // 4, nb_pix_max // 8)
 
-        #suppression de la coordonnee deja artefactee
+        # delete coordinates
         np.delete(coord_to_tache, num_pix_to_tache)
 
-        #ajout de notre taches aux autres taches
+        # add artefact with others
         taches = taches + tache
-    #on clip pour avoir une image binaire (oui oui cest con mais ca marche car soit a 0, soit a 1, soit a plus)
+    # clip to have a binary image
     taches = np.clip(taches,0,1)
     return taches
+
 ################################### Ponderated loss ##########################################################
 class PonderatedDiceloss(nn.Module):
-    """Criterion Precision loss for binary classification
-
-     Shape:
-        - Input: b * H * W * Z
-        - Target:b * H * W * Z
+    """
+    ponderated dice loss to accentute loss on the disconnections
+        INPUTS:
+            - input : image that contains disconnections
+            - target : groundtruth
+            - mask : mask of the disconnection
+        OUTPUTS:
+            - dice : global dice
+            - dice_1 : Dice on the global structure
+            - dice_2 : dice on the disconnections
     """
 
     def __init__(self) -> None:

@@ -1,13 +1,11 @@
-import numpy as np
 import logging
 import os
 import sys
 from glob import glob
 import torch
 import monai
-from monai.data import Dataset, DataLoader,CacheDataset
+from monai.data import DataLoader,CacheDataset
 from monai.inferers import sliding_window_inference
-from PIL import Image
 import json
 from monai.data.utils import partition_dataset
 from personnal_transforms import PonderatedDiceloss
@@ -139,23 +137,7 @@ check_loader = DataLoader(check_ds, batch_size=1, num_workers=1, pin_memory=torc
 
 val_ds = CacheDataset(data = val_files, transform=val_trans)
 val_loader = DataLoader(val_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
-#
-################################ Affichage d'images de vérification ##################################
 
-# for batch_data in check_loader:
-#     inputs, labels = batch_data["image"].to(device), batch_data["label"].to(device)
-#     print(inputs.shape)
-#     print("walla cest long")
-#     for i in range(inputs.shape[0]):
-#         plt.figure()
-#         plt.subplot(121)
-#         plt.imshow(inputs[i].squeeze(), cmap='gray')
-#         plt.subplot(122)
-#         plt.imshow(labels[i].squeeze(), cmap='gray')
-#
-#         plt.show()
-# #     # break
-# # # # ######################################################################################################
 best_metric = 1000
 best_metric_epoch = -1
 epoch_loss_values = []
@@ -260,22 +242,6 @@ for epoch in range(max_epochs):
             f"at epoch: {best_metric_epoch}"
         )
 torch.save(model.state_dict(), os.path.join(root_dir, "last_model.pth"))
-# plt.figure("train", (12, 6))
-# x = [i + 1 for i in range(len(epoch_loss_values))]
-# y = epoch_loss_values
-# plt.plot(x, y, "-", label="Training Loss")
-# torch.save((x, y), os.path.join(root_dir, "trainingLoss.pth"))
-#
-# x = [val_interval * (i + 1) for i in range(len(metric_values))]
-# y = metric_values
-# plt.xlabel("epoch")
-# plt.ylim(0, 1)
-# plt.plot(x, y, ":", label="Validation Loss")
-# torch.save((x, y), os.path.join(root_dir, "validationLoss.pth"))
-# plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-#            ncol=2, mode="expand", borderaxespad=0.)
-# plt.savefig(root_dir+"/evolution_training.png")
-
 
 
 # global loss
@@ -334,20 +300,7 @@ plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
 plt.savefig(root_dir + "/DBCE_training.png")
 
 plt.close()
-# BCE loss et Dice loss séparées
-# x = [i + 1 for i in range(max_epochs)]
-# y = training_loss
-# plt.plot(x, y, "-", label="Dice Loss")
-#
-# x = [i + 1 for i in range(max_epochs)]
-# y = validation_loss_dice
-# plt.xlabel("epoch")
-# plt.ylim(0, 1)
-# plt.plot(x, y, ":", label="BCE Loss")
-#
-# plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-#            ncol=2, mode="expand", borderaxespad=0.)
-# plt.savefig(root_dir + "/DBCE_separe_training.png")
+
 
 
 training_config = {

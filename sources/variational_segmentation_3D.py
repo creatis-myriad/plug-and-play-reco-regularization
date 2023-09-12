@@ -1,9 +1,7 @@
 import numpy as np
-from sources import image_utils
 import torch
 from monai.inferers import sliding_window_inference
 import pandas as pd
-from sources.quantificateurSegmentation import evaluate_image_binaire3D
 from time import time
 
 
@@ -97,22 +95,13 @@ def primal_dual_ind_reconnect_3D_no_frag(image, gt, mask, c1, c2, L, chan_weight
             reconnections = monai_predict_image(proj(pn), model, roi_size, device=device)
             pn = reconnections.copy()
             pn = proj(pn)
-        #     iterations.append(pn.copy())
-        # if nb_iter == switch_iter - 1:
-        #     iterations.append(pn.copy())
+
 
         qn = vn + sigma * L.dot((2 * pn - xn).flatten())
         qn = qn - sigma*proxg(qn/sigma, chan_weight, 1/sigma)
         xn = xn + lambda_n * (pn - xn)
         vn = vn + lambda_n * (qn - vn)
-        # seg_int = (xn.copy() > 0.5) * 1.0
 
-        # metrics = evaluate_image_binaire3D(seg_int, gt, mask)
-        # dice = metrics["dice"]
-        #
-        # values_to_add = {'iteration': nb_iter, 'dice':dice}
-        # row_to_add = pd.Series(values_to_add)
-        # following_metric = following_metric.append(row_to_add, ignore_index=True)
         energy = np.linalg.norm(xn.reshape(-1) - old_xn.reshape(-1), 2)
         values_to_add = {'iteration': nb_iter, 'energy':energy}
         row_to_add = pd.Series(values_to_add)
@@ -147,16 +136,9 @@ def primal_dual_ind_reconnect_3D(image, gt, mask, c1, c2, L, chan_weight, data_w
         qn = qn - sigma*proxg(qn/sigma, chan_weight, 1/sigma)
         xn = xn + lambda_n * (pn - xn)
         vn = vn + lambda_n * (qn - vn)
-        # seg_int = (xn.copy() > 0.5) * 1.0
-        # metrics = evaluate_image_binaire3D(seg_int, gt, mask)
-        # dice = metrics["dice"]
-        # values_to_add = {'iteration': nb_iter, 'dice':dice}
-        # row_to_add = pd.Series(values_to_add)
-        # following_metric = following_metric.append(row_to_add, ignore_index=True)
+
         energy = np.linalg.norm(xn.reshape(-1) - old_xn.reshape(-1), 2)
-        # values_to_add = {'iteration': nb_iter, 'energy':energy}
-        # row_to_add = pd.Series(values_to_add)
-        # following = following.append(row_to_add, ignore_index=True)
+
         print("Prox iteration", nb_iter, ", norm FGP:", energy)
     print("nb iter FB", nb_iter, "norm FB", energy)
     return xn, following, following_metric
@@ -189,7 +171,7 @@ def proxg_dir(u, chan_weight, gamma):
     return prox_norm
 
 def monai_predict_image(image, model, roi_size, sw_batch_size = 5, mode = "gaussian", overlap = 0.5, device = "cpu"):
-    # image = image_utils.normalize_image(image)
+
     new_image = np.zeros(image.shape + np.array([10, 10, 10]))
     new_image[
     new_image.shape[0] // 2 - image.shape[0] // 2: new_image.shape[0] // 2 + image.shape[0] // 2 + image.shape[
@@ -201,8 +183,7 @@ def monai_predict_image(image, model, roi_size, sw_batch_size = 5, mode = "gauss
 
     new_image = torch.from_numpy(new_image)
     new_image = new_image.float().unsqueeze(0).unsqueeze(0).to(device)
-    # print(device)
-    # print("lol", new_image.shape, new_image.type())
+
     model.eval()
     with torch.no_grad():
         output = sliding_window_inference(inputs=new_image, roi_size=roi_size, sw_batch_size=sw_batch_size, predictor=model, mode = mode, overlap = overlap)

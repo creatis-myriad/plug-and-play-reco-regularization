@@ -7,96 +7,14 @@ import os
 from glob import glob
 from skimage.morphology import remove_small_objects, remove_small_holes
 
-
 from sources.metriques import euler_number_error_numpy, b0_error_numpy_2D, b1_error_numpy_2D
-
 
 
 nom = "var"
 dir_to_analyse = "results/2D/var/test_optimization"
 
-
-nom = "dir"
-dir_to_analyse = "results/2D/dir/test_optimizationPD"
-
-nom = "8_reco"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-22-2023_17-13_no_seuil_no_fragment"
-# #
-nom = "8_reco_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-22-2023_18-05_no_seuil_no_fragment"
-# #
-nom = "12_reco"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-23-2023_11-57_no_seuil_no_fragment"
-# #
-nom = "12_reco_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-23-2023_11-08_no_seuil_no_fragment"
-# #
-nom = "17_reco"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-13-2023_11-10_no_seuil_no_fragment"
-# #
-nom = "17_reco_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-15-2023_15-58_no_seuil_no_fragment"
-# #
-# #
-nom = "all_reco_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-29-2023_10-01_no_seuil_no_fragment"
-# #
-#
-nom = "12_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_03-31-2023_17-57_no_seuil_no_fragment"
-
-
-nom = "dir_reco_8"
-dir_to_analyse = "results/2D/dir_reco/test_optimization_03-22-2023_18-05"
-
-nom = "dir_reco_12"
-dir_to_analyse = "results/2D/dir_reco/test_optimizationPD"
-
-nom = "dir_reco_17"
-dir_to_analyse = "results/2D/dir_reco/test_optimization_03-15-2023_15-58"
-# #
-nom = "reco_frag_12"
-dir_to_analyse = "results/2D/reco_res/test_optimization_04-04-2023_11-01_no_seuil_fragment"
-#
-nom = "post_treatement_var"
-dir_to_analyse = "results/2D/var/test_optimization/post_treatement_nn/"
-
-nom = "reco_frag_all_++"
-dir_to_analyse = "results/2D/reco_res/test_optimization_04-27-2023_16-57_fragment"
-
-nom = "reco_PD_batch_1000"
-dir_to_analyse = "results/2D/reco_res/test_optimization_05-16-2023_15-59_no_fragment"
-nom_im = "reco"
-
-nom = "reco_PD_instance_1000"
-dir_to_analyse = "results/2D/reco_res/test_optimization_05-16-2023_16-08_no_fragment"
-nom_im = "reco"
-
-
-
-nom = "reco_simple_PD_1000"
-dir_to_analyse = "results/2D/reco_res/test_optimization_05-21-2023_12-51_no_fragment"
-nom_im = "reco"
-# #
-nom = "denoise_PD_instance_1000"
-dir_to_analyse = "results/2D/reco_res/test_optimization_05-21-2023_12-53_no_fragment"
-nom_im = "reco"
-
-nom = "batchnorm_PD_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_07-07-2023_10-46_no_fragment"
-nom_im = "reco"
-# #
-nom = "batchnorm_PD_reconnect"
-dir_to_analyse = "results/2D/reco_res/test_optimization_07-07-2023_15-55_no_fragment"
-nom_im = "reco"
-nom = "batchnorm_PD_reconnect_denoise"
-dir_to_analyse = "results/2D/reco_res/test_optimization_07-07-2023_13-20_no_fragment"
-nom_im = "reco"
-
-
 patient_list = ["%.2d" % i for i in range(1,41)]
 min_size = 20
-
 
 if "connectivity.xlsx" in os.listdir(f"/home/carneiro/Documents/Master/myPrimalDual/results/2D"):
     df = pd.read_excel(f"/home/carneiro/Documents/Master/myPrimalDual/results/2D/connectivity.xlsx")
