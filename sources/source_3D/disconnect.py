@@ -22,12 +22,12 @@ from monai.transforms import (
 
 def cube(img, x, y, z, pixel_radius):
     '''
-   :param img: source_2D where a cube needs to be added
+   :param img: image where a cube needs to be added
    :param x: x-coordinate of the center of the cube to be added
    :param y: y-coordinate of the center of the cube to be added
    :param z: z-coordinate of the center of the cube to be added
    :param pixel_radius: radius of the cube
-   :return: the source_2D with a cube added at coordinates x, y, z with the specified pixel_radius
+   :return: the image with a cube added at coordinates x, y, z with the specified pixel_radius
     '''
     for i in range(x - pixel_radius, x + pixel_radius + 1):
         for j in range(y - pixel_radius, y + pixel_radius + 1):
@@ -39,12 +39,12 @@ def cube(img, x, y, z, pixel_radius):
 
 def empty_cube(img, x, y, z, pixel_radius):
     '''
-   :param img: source_2D where an empty cube needs to be added
+   :param img: image where an empty cube needs to be added
    :param x: x-coordinate of the center of the empty cube to be added
    :param y: y-coordinate of the center of the empty cube to be added
    :param z: z-coordinate of the center of the empty cube to be added
    :param pixel_radius: radius of the empty cube
-   :return: the source_2D with an empty cube added at coordinates x, y, z with the specified pixel_radius
+   :return: the image with an empty cube added at coordinates x, y, z with the specified pixel_radius
     '''
     img = cube(np.zeros(img.shape), x, y, z, pixel_radius) - cube(np.zeros(img.shape), x, y, z, pixel_radius - 1)
     return img
@@ -52,12 +52,12 @@ def empty_cube(img, x, y, z, pixel_radius):
 
 def custom_ball(img, x, y, z, pixel_radius):
     '''
-   :param img: source_2D where a ball needs to be added
+   :param img: image where a ball needs to be added
    :param x: x-coordinate of the center of the ball to be added
    :param y: y-coordinate of the center of the ball to be added
    :param z: z-coordinate of the center of the ball to be added
    :param pixel_radius: radius of the ball
-   :return: the source_2D with a ball added at coordinates x, y, z with the specified pixel_radius
+   :return: the image with a ball added at coordinates x, y, z with the specified pixel_radius
     '''
     pixel_radius = int(pixel_radius)
     for i in range(x - pixel_radius, x + pixel_radius + 1):
@@ -70,20 +70,20 @@ def custom_ball(img, x, y, z, pixel_radius):
 
 def create_simple_deconnexion(image, skelet, distance_map, x, y, z, r):
     """
-   :param image: source_2D containing the vascular structure that we want to disconnect
+   :param image: image containing the vascular structure that we want to disconnect
    :param skelet: centerlines of the vascular structure
-   :param distance_map: distance map of the source_2D
+   :param distance_map: distance map of the image
    :param x: x-coordinate of the center of the disconnection to add
    :param y: y-coordinate of the center of the disconnection to add
    :param z: z-coordinate of the center of the disconnection to add
    :param r: radius of the disconnection
-    return the source_2D containing the disconnected vascular structure
+    return the image containing the disconnected vascular structure
     """
     disconnect = np.zeros(image.shape)
     disconnect = cube(disconnect, x, y, z, r//2)
 
     # calculation of the disconnection edge for a cube
-    # locating the edge within the source_2D
+    # locating the edge within the image
     edge_disconnection = np.zeros(image.shape)
     edge_disconnection = empty_cube(edge_disconnection, x, y, z, r // 2)
 
@@ -108,11 +108,11 @@ def create_simple_deconnexion(image, skelet, distance_map, x, y, z, r):
 ################################################## Déconnexions binaires ###############################################
 def create_disconnections(image, nb_disconnection, size_max_deco = 8, nb_val_rad = None):
     """
-   :param image: source_2D containing the vascular structure that we want to disconnect
+   :param image: image containing the vascular structure that we want to disconnect
    :param nb_disconnection: number of disconnection to add to vascular structure
    :param size_max_deco: mean maximal size of disconnection that can be applied
    :param nb_val_rad: number of centerline types that can be disconnected
-    return the source_2D containing the disconnected vascular structure
+    return the image containing the disconnected vascular structure
     """
 
     urns = []
@@ -178,7 +178,7 @@ def create_disconnections(image, nb_disconnection, size_max_deco = 8, nb_val_rad
             # creation of the disconnection
             disconnect = create_simple_deconnexion(image, skelet, distance_map, x, y, z, size_ball)
 
-            # disconnection on the source_2D
+            # disconnection on the image
             disconnected_image = disconnected_image - disconnect
             disconnected_image = (disconnected_image == 1) * 1
 
@@ -191,10 +191,10 @@ def create_disconnections(image, nb_disconnection, size_max_deco = 8, nb_val_rad
 
 def generator_noise(image, noise_size, threshold):
     """
-   :param image: source_2D containing the vascular structure that we want add artefacts
+   :param image: image containing the vascular structure that we want add artefacts
    :param noise_size:frequency that represent noise ( low frequencies)
    :param threshold: threshold applied to obtain artefacts
-    return the source_2D containing the vascular structure with artefacts
+    return the image containing the vascular structure with artefacts
     """
 
     #size of the source_3D from which we add artefacts
@@ -220,7 +220,7 @@ def generator_noise(image, noise_size, threshold):
     # normalisation to treshold
     s_inv = image_utils.normalize_image(s_inv, 1)
 
-    # treshold and fusion of the source_2D and the artefact
+    # treshold and fusion of the image and the artefact
     noise = (s_inv > threshold) * 1.0
     noise = image + noise
     noise = (noise > 0)
@@ -276,7 +276,7 @@ class BinaryDeconnect(MapTransform):
 
 class AddArtefacts(MapTransform):
     """
-   :param label: source_2D containing the vascular structure that we want add artefacts
+   :param label: image containing the vascular structure that we want add artefacts
    :param mean_artefacts: frequency that represent noise( low frequencies)
    :param threshold: threshold applied to obtain artefacts
     """
@@ -321,7 +321,7 @@ class Binaries(MapTransform):
 
 ########################################################################################################################
 
-def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_max_deco, mean_artefacts, threshold):
+def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, mean_artefacts, threshold):
 
     images = sorted(glob(f"{origin_directory}/binary_images/*"))
     device = "cpu"
@@ -332,7 +332,7 @@ def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_max_de
         [
             LoadImaged(keys=["deco", "label", "label_art"]),
             ScaleIntensityd(keys=["deco", "label", "label_art"]),
-            BinaryDeconnect(keys=["deco"], nb_deco=nb_deco, size_max_deco=size_max_deco),
+            BinaryDeconnect(keys=["deco"], nb_deco=nb_deco, size_max_deco=size_deco_max),
             AddArtefacts(keys=["deco", "label_art"], label="label", mean_artefacts=mean_artefacts, threshold=threshold),
             AddChanneld(keys=["deco", "label", "label_art"]),
             ToTensord(keys=["deco", "label", "label_art"]),
@@ -342,7 +342,7 @@ def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_max_de
     check_loader = DataLoader(check_ds, batch_size=1, num_workers=1, pin_memory=torch.cuda.is_available())
 
     for batch_data, i in zip(check_loader,  range(len(images))):
-        print(f"---------------------------traitement de l'source_2D n°{i}-----------------------------")
+        print(f"---------------------------traitement du volume n°{i}-----------------------------")
         label, deco, label_art = batch_data["label"].to(device), batch_data["deco"].to(device), batch_data["label_art"].to(device)
         write_nifti(data=label.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/label_{i}.nii.gz", resample=False)
         write_nifti(data=deco.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/img_{i}.nii.gz", resample=False)

@@ -12,6 +12,9 @@ from monai.transforms import (
     MaskIntensityd,
     AddChanneld,
 )
+import sys
+sys.path.insert(0, "../")
+import image_utils
 
 # ircad files
 #toutes les images
@@ -26,41 +29,21 @@ files = [{"source_2D": img, "label": gt, "mask" : mask} for img, gt, mask in zip
 
 device = "cpu"
 
+def substract_background(image_path, mask_path, kernel_radius):
+    image = image_utils.read_nifti_image(image_path)
+    mask = image_utils.read_nifti_image(mask_path)
+    image = image_utils.normalize_image(image)
+    mask = image_utils.normalize_image(mask)
 
-transforms = Compose(
-    [
-        LoadImaged(keys=["source_2D", "label", "mask"]),
-        Orientationd(keys=["source_2D", "label", "mask"], axcodes="RAS"),
-        ScaleIntensityd(keys=["source_2D", "label", "mask"]),
-        AddChanneld(keys=["source_2D", "label", "mask"]),
-        MaskIntensityd(keys=["source_2D", "label"],mask_data= None, mask_key= "mask"),
-        ToTensord(keys=["source_2D", "label", "mask"]),
-    ]
-)
+    image = (image * 255).astype(np.uint8)
 
-check_ds = Dataset(data=files, transform=transforms)
-check_loader = DataLoader(check_ds, batch_size=1, num_workers=1, shuffle=False)
-
-i =0
-for batch_data in check_loader:
-    inputs, labels, masks = (batch_data["source_2D"].to(device), batch_data["label"].to(device), batch_data["mask"].to(device))
-    inputs = inputs.squeeze().numpy()
-    labels = labels.squeeze().numpy()
-    masks = masks.squeeze().numpy()
-
-    inputs = (inputs*255).astype(np.uint8)
-
-    ball = morphology.ball(median_size)
-    background = filters.median(inputs, ball)
-    background = inputs.astype(np.int16) - background
+    ball = morphology.ball(kernel_radius)
+    background = filters.median(image, ball)
+    background = image.astype(np.int16) - background
     background[background < 0] = 0
-    masks = morphology.binary_erosion(masks, morphology.ball(4))
+    mask = morphology.binary_erosion(mask, morphology.ball(4))
 
-    image_pre_processed = background * masks
-    write_nifti(data = inputs, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] + "/inputs.nii.gz", resample = False)
-    write_nifti(data = masks, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] + "/masks.nii.gz", resample = False)
-    write_nifti(data = image_pre_processed, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] + "/preprocessed.nii.gz", resample = False)
-    write_nifti(data = labels, file_name ="../../datas/ircad_iso_V3/pretreated_ircad_"+ str(median_size)+"/" + file_pretreated_results[i] +"/labels.nii.gz", resample = False)
-    i = i + 1
+    image_pre_processed = background * mask
 
+    return image_pre_processed
 

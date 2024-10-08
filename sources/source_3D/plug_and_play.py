@@ -1,11 +1,11 @@
-import sources.grad_div_interpolation_3d as grd3D
+import sources.source_3D.grad_div_interpolation_3d as grd3D
 import monai
 import nibabel as ni
 from sources import image_utils
 import json
 import numpy as np
 import torch
-from source_3D.post_treatement import monai_predict_image
+from sources.source_3D.post_treatement import monai_predict_image
 
 def primal_dual_ind_reconnect_3D(image, c1, c2, L, chan_weight, switch_iter, model, roi_size, tau = 0.25, sigma = 0.25, epsilon=1.e-1,lambda_n = 0.5,
                                 max_iter=100, device=torch.device("cpu")):
