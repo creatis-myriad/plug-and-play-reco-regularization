@@ -27,8 +27,8 @@ norm = "batch"
 #post-processing
 segmentation_path = "../../volumes/segmentation_test/image_01.nii.gz"
 result_path = "../../volumes/results/image_01_post_processed.nii.gz"
-# image_post_treated = post_treatement(segmentation_path, name_dir_model, 10)
-# save_nifti(image_post_treated,result_path, metadata_model=segmentation_path)
+image_post_treated = post_treatement(segmentation_path, name_dir_model, 10)
+save_nifti(image_post_treated,result_path, metadata_model=segmentation_path)
 
 
 #plug and play
@@ -41,8 +41,8 @@ tv_weight = 0.008
 kernel_radius = 10
 switch_iter = 500
 #pretreatement in order to be able to use the chan-vese data fidelity term
-# image_preprocessed = substract_background(image_path, mask_path, kernel_radius)
-# save_nifti(image_preprocessed,preprocessed_path, metadata_model=image_path)
+image_preprocessed = substract_background(image_path, mask_path, kernel_radius)
+save_nifti(image_preprocessed,preprocessed_path, metadata_model=image_path)
 
 segment_8_bits_reco = reconnector_plug_and_play(preprocessed_path, gt_path, mask_path, tv_weight, name_dir_model, sigma=10e-3)
 preprocessed_path = "../../volumes/results/image_01_plug_and_play.nii.gz"
