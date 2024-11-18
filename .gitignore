@@ -1,7 +1,0 @@
-volumes/binary_trees/binary_images/*
-volumes/binary_trees/masks/*
-volumes/curvilinear_structures_to_segment/mask/*
-volumes/curvilinear_structures_to_segment/origin/*
-volumes/curvilinear_structures_to_segment/preprocessed/*
-volumes/generated_dataset/*
-volumes/segmentation_test/*
