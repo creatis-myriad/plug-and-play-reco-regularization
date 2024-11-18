@@ -21,7 +21,7 @@ threshold = 0.8
 name_dir_model = "../../modeles/3D_model_vascu"
 type_training = "reconnect_denoise"
 norm = "batch"
-# training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)
+training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)
 
 # last step : use it either as a post processing or as a regularisation term for a variational segmentation
 #post-processing
