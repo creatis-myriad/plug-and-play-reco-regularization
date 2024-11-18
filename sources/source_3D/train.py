@@ -73,6 +73,7 @@ class PonderatedDiceloss(nn.Module):
 
 def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 96, 96), lr=1e-3, batch_size=4, max_epochs = 1000):
 
+    os.mkdir(name_dir_model)
     ######################################### Parameters############################################################
     size_patch = roi_size
     shuffle = True
@@ -85,6 +86,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
     elif type_training == "denoise":
         gts = sorted(glob(f"{name_directory}/denoise_deconnected_*.nii.gz"))
 
+    mask = sorted(glob(f"{name_directory}/pos_*.nii.gz"))
     ##################################### determination de la loss ################################################
 
     loss_function = PonderatedDiceloss()
@@ -100,31 +102,27 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
     monai.utils.set_determinism(seed=seed, additional_settings=None)
 
     # adding empty patches as there are not empty patches in vascusynth creating by adding artefacts to empty source_3D
-    images += sorted(glob(os.path.join(f"patch_vide/noise*.nii.gz")))
-    gts += sorted(glob(os.path.join(f"patch_vide/pos_deco*.nii.gz")))
+    # images += sorted(glob(os.path.join(f"patch_vide/noise*.nii.gz")))
+    # gts += sorted(glob(os.path.join(f"patch_vide/pos_deco*.nii.gz")))
+    # mask += sorted(glob(f"patch_vide/pos_*.nii.gz"))
 
 
     images_num = range(len(images))
-    list_partition = partition_dataset(images_num, ratios=[20, 2], shuffle=shuffle)
+    list_partition = partition_dataset(images_num, ratios=[4, 1], shuffle=shuffle)
 
     # creation of the training lists
     images_train = [images[x] for x in list_partition[0]]
     gts_train = [gts[x] for x in list_partition[0]]
+    masks_train = [mask[x] for x in list_partition[0]]
 
     images_val = [images[x] for x in list_partition[1]]
     gts_val = [gts[x] for x in list_partition[1]]
-
-
-
-    mask = sorted(glob(f"{name_directory}/masked_pos_deco*.nii.gz"))
-    mask += sorted(glob(f"patch_vide/pos_deco*.nii.gz"))
-    masks_train = [mask[x] for x in list_partition[0]]
     masks_val = [mask[x] for x in list_partition[1]]
 
     # creation of training dictionnaries
 
-    train_files = [{"source_2D": img, "label": gt, "mask": mask} for img, gt, mask in zip(images_train, gts_train, masks_train)]
-    val_files = [{"source_2D": img, "label": gt, "mask": mask} for img, gt, mask in zip(images_val, gts_val, masks_val)]
+    train_files = [{"image": img, "label": gt, "mask": mask} for img, gt, mask in zip(images_train, gts_train, masks_train)]
+    val_files = [{"image": img, "label": gt, "mask": mask} for img, gt, mask in zip(images_val, gts_val, masks_val)]
 
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -146,25 +144,25 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
 
     train_trans = Compose(
         [
-            LoadImaged(keys=["source_2D", "label", "mask"]),
-            ScaleIntensityd(keys=["source_2D", "label", "mask"]),
-            AddChanneld(keys=["source_2D", "label", "mask"]),
-            SpatialPadD(keys=["source_2D", "label", "mask"], spatial_size=[96,96,96]),
-            RandRotate90d(keys=["source_2D", "label", "mask"], prob=0.5, spatial_axes=[0, 1]),
-            RandFlipd(keys=["source_2D", "label", "mask"], prob=0.5, spatial_axis=[0, 1]),
-            RandSpatialCropd(["source_2D", "label", "mask"], roi_size=size_patch, random_size=False),
-            ToTensord(keys=["source_2D", "label", "mask"]),
+            LoadImaged(keys=["image", "label", "mask"]),
+            ScaleIntensityd(keys=["image", "label", "mask"]),
+            AddChanneld(keys=["image", "label", "mask"]),
+            SpatialPadD(keys=["image", "label", "mask"], spatial_size=[96,96,96]),
+            RandRotate90d(keys=["image", "label", "mask"], prob=0.5, spatial_axes=[0, 1]),
+            RandFlipd(keys=["image", "label", "mask"], prob=0.5, spatial_axis=[0, 1]),
+            RandSpatialCropd(["image", "label", "mask"], roi_size=size_patch, random_size=False),
+            ToTensord(keys=["image", "label", "mask"]),
         ]
     )
 
     val_trans = Compose(
         [
-            LoadImaged(keys=["source_2D", "label", "mask"]),
-            ScaleIntensityd(keys=["source_2D", "label", "mask"]),
-            AddChanneld(keys=["source_2D", "label", "mask"]),
-            SpatialPadD(keys=["source_2D", "label", "mask"], spatial_size=[96, 96, 96]),
-            RandSpatialCropd(["source_2D", "label", "mask"], roi_size=size_patch, random_size=False),
-            ToTensord(keys=["source_2D", "label", "mask"]),
+            LoadImaged(keys=["image", "label", "mask"]),
+            ScaleIntensityd(keys=["image", "label", "mask"]),
+            AddChanneld(keys=["image", "label", "mask"]),
+            SpatialPadD(keys=["image", "label", "mask"], spatial_size=[96, 96, 96]),
+            RandSpatialCropd(["image", "label", "mask"], roi_size=size_patch, random_size=False),
+            ToTensord(keys=["image", "label", "mask"]),
         ]
     )
 
@@ -191,7 +189,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         for batch_data in check_loader:
             step += 1
 
-            inputs, labels, masks = (batch_data["source_2D"].to(device), batch_data["label"].to(device), batch_data["mask"].to(device))
+            inputs, labels, masks = (batch_data["image"].to(device), batch_data["label"].to(device), batch_data["mask"].to(device))
             optimizer.zero_grad()
             outputs = model(inputs)
             outputs = torch.sigmoid(outputs)
@@ -215,7 +213,6 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         training_loss_dice.append(epoch_loss_norm_dice)
         epoch_loss_frag /= step
         training_loss_dice_frag.append(epoch_loss_frag)
-        print(f"epoch {epoch + 1} average Dice loss: {epoch_loss_D:.4f}, BCE Loss: {epoch_loss_norm_dice:.4f}, DBCE Loss: {epoch_loss_frag:.4f}")
 
         model.eval()
         epoch_loss_D = 0
@@ -226,7 +223,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
             for val_data in val_loader:
                 metric_count += 1
                 # evaluation sur les patches
-                val_inputs, val_labels, val_masks = (val_data["source_2D"].to(device), val_data["label"].to(device), val_data["mask"].to(device) )
+                val_inputs, val_labels, val_masks = (val_data["image"].to(device), val_data["label"].to(device), val_data["mask"].to(device) )
                 val_outputs = model(val_inputs)
                 val_outputs = torch.sigmoid(val_outputs)
                 value1, val_norm_dice, val_dice_frag = loss_function(val_outputs, val_labels, val_masks)
@@ -242,8 +239,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
                 validation_loss_dice.append(epoch_loss_norm_dice)
                 validation_loss_dice_frag.append(epoch_loss_frag)
 
-                metric = epoch_loss_D
-                print(f"epoch {epoch + 1} average Dice loss: {epoch_loss_D:.4f}, BCE Loss: {epoch_loss_norm_dice:.4f}, DBCE Loss: {epoch_loss_frag:.4f}")
+            metric = epoch_loss_D
 
             if metric < best_metric:
                 best_metric = metric

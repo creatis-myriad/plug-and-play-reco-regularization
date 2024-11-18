@@ -6,20 +6,8 @@ from PIL import Image
 from sources import image_utils
 from skimage.measure import euler_number
 
-def read_image(path):
-    '''
-    :param path: chemin vers l'source_2D a lire
-    :return: numpy de l'source_2D
-    '''
-    image = Image.open(path)
-    return np.array(image)
 
 
-def normalize_image(image):
-    maxi = np.amax(image)
-    mini = np.amin(image)
-    image_norm = (image.astype(np.float64) - mini) / (maxi - mini)
-    return image_norm
 
 
 def overlap_2D(img, gt):
@@ -34,8 +22,8 @@ def overlap_2D(img, gt):
     visu_TPM_FP = np.zeros((img.shape[0], img.shape[1], 3))
 
     # skeletisation des segmentations
-    img_skelet = normalize_image(skeletonize(img)*1.0)
-    gt_skelet = normalize_image(skeletonize(gt)*1.0)
+    img_skelet = image_utils.normalize_image(skeletonize(img)*1.0)
+    gt_skelet =  image_utils.normalize_image(skeletonize(gt)*1.0)
 
     # recuperation des rayons des vaisseaux
     distance_map = ndimage.distance_transform_bf(gt, 'chessboard')
@@ -148,79 +136,9 @@ def overlap_3D(img, gt):
 
     return (TPM + TPR) / (TPM + TPR + FP + FN)
 
-def connectivity(image, gt):
-    """
-    :param image: segmentation a analyser
-    :param gt: verite terrain
-    :return: valeur de la connectivite
-    """
-    nb_component_image = np.max(label(image))
-    nb_component_gt = np.max(label(gt))
 
-    con = 1 - min(1, (abs(nb_component_gt - nb_component_image)) / np.sum(gt))
-    return con
 
-def area(image, gt, alpha = 2):
-    """
 
-    :param image: segmentation a analyser
-    :param gt: verite terrain
-    :param alpha: taille du disque de la dilatation
-    :return: la valeur de recouvrement de la segmentation sur la verite terrain
-    """
-    if len(image.shape) == 2:
-        dilated_image = binary_dilation(image, disk(alpha))
-        dilated_gt = binary_dilation(gt, disk(alpha))
-
-        area = np.sum(np.logical_or(dilated_image * gt, dilated_gt * image)) / np.sum(np.logical_or(gt, image))
-    elif len(image.shape) == 3:
-        dilated_image = binary_dilation(image, ball(alpha))
-        dilated_gt = binary_dilation(gt, ball(alpha))
-
-        area = np.sum(np.logical_or(dilated_image * gt, dilated_gt * image)) / np.sum(np.logical_or(gt, image))
-    else:
-        area = -1
-    return area
-
-def length(image, gt, beta = 2):
-    """
-
-    :param image: segmentation a analyser
-    :param gt: verite terrain
-    :param beta:  taille du disque de la dilatation
-    :return: taille du reseau vasculaire detecté
-    """
-    if len(image.shape) == 2:
-        dilated_image = binary_dilation(image, disk(beta))
-        dilated_gt = binary_dilation(gt, disk(beta))
-
-        sq_image = normalize_image(skeletonize(image) * 1.0)
-        sq_gt = normalize_image(skeletonize(gt) * 1.0)
-
-        length = np.sum(np.logical_or(dilated_image * sq_gt, dilated_gt * sq_image)) / np.sum(np.logical_or(sq_gt, sq_image))
-    elif len(image.shape) == 3:
-        dilated_image = binary_dilation(image, ball(beta))
-        dilated_gt = binary_dilation(gt, ball(beta))
-
-        sq_image = normalize_image(skeletonize(image) * 1.0)
-        sq_gt = normalize_image(skeletonize(gt) * 1.0)
-
-        length = np.sum(np.logical_or(dilated_image * sq_gt, dilated_gt * sq_image)) / np.sum(
-            np.logical_or(sq_gt, sq_image))
-    else:
-        length = -1
-    return length
-
-def cal(image, gt):
-    """
-
-    :param image: segmentation a analyser
-    :param gt: verite terrain
-    :return: mesure CAL
-    """
-    if length(image, gt) == -1:
-        return -1
-    return length(image, gt) * area(image, gt) * connectivity(image, gt)
 
 
 def cldice(image, gt):
@@ -230,8 +148,8 @@ def cldice(image, gt):
         :param gt: verite terrain
         :return: t_sens, t_prec et la valeur du clDice
         """
-    sq_image = normalize_image(skeletonize(image) * 1.0)
-    sq_gt = normalize_image(skeletonize(gt) * 1.0)
+    sq_image =  image_utils.normalize_image(skeletonize(image) * 1.0)
+    sq_gt =  image_utils.normalize_image(skeletonize(gt) * 1.0)
 
     t_sens = np.sum(sq_gt * image) / np.sum(sq_gt)
     t_prec = np.sum(sq_image * gt) / np.sum(sq_image)

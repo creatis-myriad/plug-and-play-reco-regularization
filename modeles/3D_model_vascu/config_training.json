@@ -1,0 +1,1 @@
+{"input": "deco", "output": "label", "optimizer": "adam", "norm": "batch", "patch_vide": true, "batch_size": 4, "learning_rate": 0.001, "epochs": 1000, "loss": "PD", "patch_size": [96, 96, 96], "type_training": "vascu", "best_epoch": 722, "best_diceloss": 0.11990070272059668, "seed": 5343077251, "residual architecture": "True"}

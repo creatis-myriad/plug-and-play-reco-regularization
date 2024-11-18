@@ -15,37 +15,37 @@ mean_artefacts = 30
 nb_deco = 20
 threshold = 0.8
 
-create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, mean_artefacts, threshold)
+# create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, mean_artefacts, threshold)
 
 # Second step : once the dataset is created, we can train the model
 name_dir_model = "../../modeles/3D_model_vascu"
 type_training = "reconnect_denoise"
 norm = "batch"
-training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)
+# training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)
 
 # last step : use it either as a post processing or as a regularisation term for a variational segmentation
 #post-processing
 segmentation_path = "../../volumes/segmentation_test/image_01.nii.gz"
 result_path = "../../volumes/results/image_01_post_processed.nii.gz"
-image_post_treated = post_treatement(segmentation_path, name_dir_model, 10)
-save_nifti(image_post_treated,result_path, metadata_model=segmentation_path)
+# image_post_treated = post_treatement(segmentation_path, name_dir_model, 10)
+# save_nifti(image_post_treated,result_path, metadata_model=segmentation_path)
 
 
 #plug and play
-image_path = "../../volumes/curvilinear_structures_to_segment/origin/image_01.nii.gz"
-mask_path = "../../volumes/curvilinear_structures_to_segment/mask/mask_01.nii.gz"
-preprocessed_path = "../../volumes/curvilinear_structures_to_segment/preprocessed/01_preprocessed.nii.gz"
+image_path = "../../volumes/curvilinear_structures_to_segment/origin/maskedLiverIso.nii"
+mask_path = "../../volumes/curvilinear_structures_to_segment/mask/liverMaskIso.nii"
+gt_path = "../../volumes/curvilinear_structures_to_segment/gt/vesselsIso.nii"
+
+preprocessed_path = "../../volumes/curvilinear_structures_to_segment/preprocessed/preprocessed.nii.gz"
 tv_weight = 0.008
-kernel_radius = 15
-
+kernel_radius = 10
+switch_iter = 500
 #pretreatement in order to be able to use the chan-vese data fidelity term
-image_preprocessed = substract_background(image_path, mask_path, kernel_radius)
-save_nifti(image_preprocessed,preprocessed_path, metadata_model=image_path)
+# image_preprocessed = substract_background(image_path, mask_path, kernel_radius)
+# save_nifti(image_preprocessed,preprocessed_path, metadata_model=image_path)
 
-segment_8_bits_reco = reconnector_plug_and_play(preprocessed_path, tv_weight, name_dir_model, sigma=10e-3)
-
-
-
-
+segment_8_bits_reco = reconnector_plug_and_play(preprocessed_path, gt_path, mask_path, tv_weight, name_dir_model, sigma=10e-3)
+preprocessed_path = "../../volumes/results/image_01_plug_and_play.nii.gz"
+save_nifti(segment_8_bits_reco, preprocessed_path, metadata_model=image_path)
 
 

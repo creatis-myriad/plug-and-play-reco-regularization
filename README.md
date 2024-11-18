@@ -27,6 +27,5 @@ The files in ```source_2D``` and ```source_3D``` are:
 - ```compared_methods.py```: contains different methods with which we compared ourselves with. 
 
 
-**/!\ only 2D has been tested on this repository yet !**
 
  

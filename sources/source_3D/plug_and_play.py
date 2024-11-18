@@ -88,14 +88,14 @@ def reconnector_plug_and_play(image_path, gt_path, mask_path, tv_weight, model_d
     tau = 2 / (1.1 + 24 * sigma)
 
     gt = ni.load(gt_path).get_fdata()
-    gt = (image_utils.normalize_image(gt) * 255).astype(np.uint8)
-    gt_norm = image_utils.normalize_image(gt)
+    gt = (image_utils.normalize_image(gt, 1) * 255).astype(np.uint8)
+    gt_norm = image_utils.normalize_image(gt, 1)
 
     image = ni.load(image_path).get_fdata()
-    image_norm = image_utils.normalize_image(image)
+    image_norm = image_utils.normalize_image(image, 1)
 
     mask = ni.load(mask_path).get_fdata()
-    mask = image_utils.normalize_image(mask)
+    mask = image_utils.normalize_image(mask, 1)
 
 
     # calculate C1 et c2 knowing the groundtruth to optimize the result for each source_2D
@@ -132,7 +132,7 @@ def reconnector_plug_and_play(image_path, gt_path, mask_path, tv_weight, model_d
     L = grd3D.standard_gradient_operator_3d(op_gradz, op_grady, op_gradx)
 
     xn_reconnector, __, __ = primal_dual_ind_reconnect_3D(image_norm, c1, c2, L, tv_weight,
-                                                      model, roi_size, switch_iter, tau, sigma, 1.e-5, lambda_n,
+                                                      switch_iter, model, roi_size, tau, sigma, 1.e-5, lambda_n,
                                                       max_iter, device)
 
     segment_reconnector = (xn_reconnector >= 0.5) * 1.0

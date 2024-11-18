@@ -1,7 +1,6 @@
 import numpy as np
 from skimage.morphology import skeletonize, ball, binary_dilation
 from scipy import ndimage
-from sources import image_utils
 from monai.transforms import MapTransform
 from typing import Any, Hashable, Optional, Tuple
 from monai.config import KeysCollection
@@ -17,6 +16,9 @@ from monai.transforms import (
     ScaleIntensityd,
     ToTensord,
 )
+import sys
+sys.path.insert(0, "../../")
+from sources import image_utils
 
 # ################################### Fonctions pour déconnexions et artefacts ###########################################
 
