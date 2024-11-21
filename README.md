@@ -9,7 +9,7 @@ This repo contains the code to apply methods presented in two different papers :
 - Sophie Carneiro-Esteves, Antoine Vacavant and Odyssée Merveille. "Restoring Connectivity in Vascular Segmentations using a Learned Post-Processing Model" TGI3, MICCAI 2024 Workshop
 
 
-## Code constitution
+## Code structure
 The code is stocked in ```sources/```. 
 - ```source_2D``` contains the python functions that permits to treat 2D images.
 - ```source_3D``` contains the python functions that permits to treat 3D images.
