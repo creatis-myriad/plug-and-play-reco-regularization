@@ -73,11 +73,13 @@ class PonderatedDiceloss(nn.Module):
 
 def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 96, 96), lr=1e-3, batch_size=4, max_epochs = 1000):
 
+
+
     os.mkdir(name_dir_model)
     ######################################### Parameters############################################################
     size_patch = roi_size
     shuffle = True
-    seed = random.randint(0, 10000000000)
+    seed = random.randint(0, 1000000000)
     images = sorted(glob(f"{name_directory}/img_*.nii.gz"))
     if type_training == "reconnect":
         gts = sorted(glob(f"{name_directory}/seg_*.nii.gz"))

@@ -15,10 +15,10 @@ mean_artefacts = 30
 nb_deco = 20
 threshold = 0.8
 
-# create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, mean_artefacts, threshold)
+create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, mean_artefacts, threshold)
 
 # Second step : once the dataset is created, we can train the model
-name_dir_model = "../../modeles/3D_model_vascu"
+name_dir_model = "../../modeles/3D_model_vascu_test"
 type_training = "reconnect_denoise"
 norm = "batch"
 training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)
