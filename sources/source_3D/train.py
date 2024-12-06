@@ -72,7 +72,18 @@ class PonderatedDiceloss(nn.Module):
 
 
 def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 96, 96), lr=1e-3, batch_size=4, max_epochs = 1000):
+ """
+    :param name_directory: path to the training dataset directory
+    :name_dir_model: path to the directory where the model will be saved. the directory will be created
+    :param type_training: three different training possible : "reconnect" (only reconnect and do not denoise), "reconnect_denoise"(reconnect and denoise), "denoise" (only denoise and do not reconnect)
+    :param norm: norm used in the model
+    :param roi_size:
+    :param lr:
+    :param batch_size:
+    :param max_epochs:
 
+    return
+    """
 
 
     os.mkdir(name_dir_model)
