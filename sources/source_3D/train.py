@@ -233,13 +233,13 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
                 epoch_loss_norm_dice += val_norm_dice.item()
                 epoch_loss_frag += val_dice_frag.item()
 
-                epoch_loss_D /= metric_count
-                epoch_loss_norm_dice /= metric_count
-                epoch_loss_frag /= metric_count
+            epoch_loss_D /= metric_count
+            epoch_loss_norm_dice /= metric_count
+            epoch_loss_frag /= metric_count
 
-                validation_loss.append(epoch_loss_D)
-                validation_loss_dice.append(epoch_loss_norm_dice)
-                validation_loss_dice_frag.append(epoch_loss_frag)
+            validation_loss.append(epoch_loss_D)
+            validation_loss_dice.append(epoch_loss_norm_dice)
+            validation_loss_dice_frag.append(epoch_loss_frag)
 
             metric = epoch_loss_D
 
