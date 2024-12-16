@@ -41,6 +41,21 @@ To understand the order of operations, check out the ```example.py``` file. It d
 
 If you don't have annotations or binary vascular trees to train a model, models used in [1] and [2] are available in the directory ```modeles```.
 
+## Models 
+
+4 models are provided : 
+
+- ```2D_model_CCO```: a model trained to reconnect on 2D synthetics binary trees generated with [OpenCCO](https://github.com/OpenCCO-team/OpenCCO)
+- ```2D_model_stare```: a model trained to reconnect on 2D manual annotations from the [STARE Dataset](https://cecas.clemson.edu/~ahoover/stare/) (retinophotographies)
+- ```3D_model_vascu```: a model trained to reconnect on 3D synthetics binary trees generated with [Vascusynth](https://vascusynth.cs.sfu.ca/Welcome.html)
+- ```3D_model_IXI```: a model trained to reconnect on 3D manual annotations made on the [IXI dataset](http://brain-development.org/ixi-dataset/) (Brain MRA) 
+## Environment Conda
+
+An python environment is given to run the code and can be installed with the following command : 
+
+```conda env create -f environment.yml```
+
+
 
 
 
