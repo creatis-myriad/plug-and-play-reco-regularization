@@ -21,11 +21,11 @@ The code is stocked in ```sources/```.
 The files in ```source_2D``` and ```source_3D``` are:
 - ```disconnect.py``` : contains the functions to disconnect a binary tree.
 - ```train.py```: contains the functions to train a reconnecting model with a generated dataset.
-- ```post_treatement.py```: contains the function to use the reconnecting model as a post processing on a curvilinear segmentation.
-- ```pretreatement.py```: contains a function that delete the background of an image to have an image composed of two classes.
+- ```post_treatement.py```: contains the function to apply the reconnecting model as a post processing on a curvilinear segmentation.
+- ```pretreatement.py```: contains a function that removes the background of an image to have an image composed of two classes.
 - ```plug_and_play.py``` :  contains the functions to apply an unsupervised plug-and-play segmentation approach using the reconnecting model.
 - ```grad_div_interpolation.py```: contains the functions for gradient operations.
-- ```example.py``` : is a script to run that apply the different proposed frameworks
+- ```example.py``` : is a script to run that apply the different steps of the frameworks proposed in [1] and [2].
 - ```compared_methods.py```: contains different methods with which we compared ourselves with. 
 
 
@@ -36,10 +36,10 @@ To understand the order of operations, check out the ```example.py``` file. It d
 - Create a dataset.
 - Train the neural network.
 - Apply the trained model as a post-processing step.
-- Use the trained model as a regularisation term for a plug-and-play segmentation pipeline.
+- Use the trained model as a regularisation term for a plug-and-play segmentation.
 
 
-If you don't have annotations or binary vascular trees to train a model, models used in [1] and [2] are available in the directory ```modeles```.
+If you don't have annotation or binary vascular trees to train a model, models used in [1] and [2] are available in the directory ```modeles```.
 
 ## Models 
 
@@ -49,6 +49,7 @@ If you don't have annotations or binary vascular trees to train a model, models 
 - ```2D_model_stare```: a model trained to reconnect on 2D manual annotations from the [STARE Dataset](https://cecas.clemson.edu/~ahoover/stare/) (retinophotographies)
 - ```3D_model_vascu```: a model trained to reconnect on 3D synthetics binary trees generated with [Vascusynth](https://vascusynth.cs.sfu.ca/Welcome.html)
 - ```3D_model_IXI```: a model trained to reconnect on 3D manual annotations made on the [IXI dataset](http://brain-development.org/ixi-dataset/) (Brain MRA) 
+
 ## Environment Conda
 
 An python environment is given to run the code and can be installed with the following command : 
