@@ -1,0 +1,1 @@
+{"input": "deco", "output": "label", "optimizer": "adam", "norm": "batch", "patch_vide": false, "batch_size": 4, "learning_rate": 0.001, "epochs": 3000, "loss": "PD", "patch_size": [96, 96, 96], "type_training": "IXI", "best_epoch": 2983, "best_diceloss": 4.76837158203125e-07, "seed": 6559256314, "residual architecture": "True"}
