@@ -36,6 +36,7 @@ To understand the order of operations, check out the ```example.py``` file. It d
 - Create a dataset.
 - Train the neural network.
 - Apply the trained model as a post-processing step.
+- Use the trained model as a regularisation term for a plug-and-play segmentation pipeline.
 
 
 If you don't have annotations or binary vascular trees to train a model, models used in [1] and [2] are available in the directory ```modeles```.
