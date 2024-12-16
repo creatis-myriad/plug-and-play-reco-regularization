@@ -63,7 +63,7 @@ def post_treatement(segmentation_path, model_directory_path, iterations=10):
 
     for i in range(1, iterations + 1):
         image = image_utils.normalize_image(image, 1)
-        image = monai_predict_image(image, model, roi_size=parameters_training["roi_size"], device=device)
+        image = monai_predict_image(image, model, roi_size=parameters_training["patch_size"], device=device)
         image = ((image >= 0.5) * 255).astype(np.uint8)
 
     return image

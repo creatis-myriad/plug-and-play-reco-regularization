@@ -5,15 +5,13 @@ import sys
 from glob import glob
 import torch
 import monai
-from monai.data import Dataset, DataLoader,CacheDataset
+from monai.data import DataLoader,CacheDataset
 from monai.inferers import sliding_window_inference
-from PIL import Image
 import json
 from monai.data.utils import partition_dataset
-from torchsummary import summary
 from torch import nn
 from monai.transforms import (
-    AddChanneld,
+    EnsureChannelFirstd,
     Compose,
     LoadImaged,
     RandRotate90d,
@@ -149,7 +147,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         [
             LoadImaged(keys=["source_2D", "label", "mask"]),
             ScaleIntensityd(keys=["source_2D", "label", "mask"]),
-            AddChanneld(keys=["source_2D", "label", "mask"]),
+            EnsureChannelFirstd(keys=["source_2D", "label", "mask"]),
             RandSpatialCropSamplesd(keys=["source_2D", "label", "mask"], roi_size = roi_size, num_samples = 32, random_size=False),
             RandRotate90d(keys=["source_2D", "label", "mask"], prob=0.5, spatial_axes=[0, 1]),
             RandFlipd(keys=["source_2D", "label", "mask"], prob=0.5, spatial_axis=[0, 1]),
@@ -161,7 +159,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         [
             LoadImaged(keys=["source_2D", "label", "mask"]),
             ScaleIntensityd(keys=["source_2D", "label", "mask"]),
-            AddChanneld(keys=["source_2D", "label", "mask"]),
+            EnsureChannelFirstd(keys=["source_2D", "label", "mask"]),
             ToTensord(keys=["source_2D", "label", "mask"]),
         ]
         )
@@ -277,60 +275,60 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
             )
     torch.save(model.state_dict(), os.path.join(name_dir_model, "last_model.pth"))
 
-    # global loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss
-    plt.plot(x, y, "-", label="global Loss")
-    torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-
-    plt.plot(x, y, ":", label="Global Validation Loss")
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/PDdice_training.png")
-    # torch.save((x, y), os.path.join(name_dir_model, "Dice_validationLoss.pth"))
-    plt.close()
-
-
-    # normal dice loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss_dice
-    plt.plot(x, y, "-", label="norm_dice_Training loss")
-    # torch.save((x, y), os.path.join(name_dir_model, "normdice_trainingLoss.pth"))
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss_dice
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="normdice_Validation Loss")
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/normal_dice_training.png")
-    # torch.save((x, y), os.path.join(name_dir_model, "normdice_validationLoss.pth"))
-    plt.close()
-
-    # fragment dice loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss_dice_frag
-    plt.plot(x, y, "-", label="frag_dice_Training Loss")
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss_dice_frag
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="frag_dice__Validation Loss")
-
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/frag_dice_training.png")
-
-    plt.close()
+    # # global loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss
+    # plt.plot(x, y, "-", label="global Loss")
+    # torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    #
+    # plt.plot(x, y, ":", label="Global Validation Loss")
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/PDdice_training.png")
+    # # torch.save((x, y), os.path.join(name_dir_model, "Dice_validationLoss.pth"))
+    # plt.close()
+    #
+    #
+    # # normal dice loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss_dice
+    # plt.plot(x, y, "-", label="norm_dice_Training loss")
+    # # torch.save((x, y), os.path.join(name_dir_model, "normdice_trainingLoss.pth"))
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss_dice
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="normdice_Validation Loss")
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/normal_dice_training.png")
+    # # torch.save((x, y), os.path.join(name_dir_model, "normdice_validationLoss.pth"))
+    # plt.close()
+    #
+    # # fragment dice loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss_dice_frag
+    # plt.plot(x, y, "-", label="frag_dice_Training Loss")
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss_dice_frag
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="frag_dice__Validation Loss")
+    #
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/frag_dice_training.png")
+    #
+    # plt.close()
 
 
     training_config = {

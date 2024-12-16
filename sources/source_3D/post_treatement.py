@@ -77,6 +77,6 @@ def post_treatement(segmentation_path, model_directory_path, iterations=10):
     image = (image >= 0.5) * 1.0
     for i in range(1, iterations + 1):
         image = image_utils.normalize_image(image, 1)
-        image = monai_predict_image(image, model, parameters_training["roi_size"], sw_batch_size=5, mode="gaussian", overlap=0.5)
+        image = monai_predict_image(image, model, parameters_training["patch_size"], sw_batch_size=5, mode="gaussian", overlap=0.5)
         image = (image >= 0.5) * 1
     return image

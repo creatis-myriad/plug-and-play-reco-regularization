@@ -9,11 +9,10 @@ import argparse
 import random
 from glob import glob
 from monai.data.utils import partition_dataset
-from monai.data import Dataset, DataLoader, write_nifti, CacheDataset
-from torchsummary import summary
+from monai.data import DataLoader, CacheDataset
 from torch import nn
 from monai.transforms import (
-    AddChanneld,
+    EnsureChannelFirstd,
     Compose,
     LoadImaged,
     RandRotate90d,
@@ -131,7 +130,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
 
     # model unet
     model = monai.networks.nets.UNet(
-        dimensions=3,
+        spatial_dims=3,
         in_channels=1,
         out_channels=1,
         channels=(16, 32, 64, 128),
@@ -148,7 +147,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         [
             LoadImaged(keys=["image", "label", "mask"]),
             ScaleIntensityd(keys=["image", "label", "mask"]),
-            AddChanneld(keys=["image", "label", "mask"]),
+            EnsureChannelFirstd(keys=["image", "label", "mask"]),
             SpatialPadD(keys=["image", "label", "mask"], spatial_size=[96,96,96]),
             RandRotate90d(keys=["image", "label", "mask"], prob=0.5, spatial_axes=[0, 1]),
             RandFlipd(keys=["image", "label", "mask"], prob=0.5, spatial_axis=[0, 1]),
@@ -161,7 +160,7 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
         [
             LoadImaged(keys=["image", "label", "mask"]),
             ScaleIntensityd(keys=["image", "label", "mask"]),
-            AddChanneld(keys=["image", "label", "mask"]),
+            EnsureChannelFirstd(keys=["image", "label", "mask"]),
             SpatialPadD(keys=["image", "label", "mask"], spatial_size=[96, 96, 96]),
             RandSpatialCropd(["image", "label", "mask"], roi_size=size_patch, random_size=False),
             ToTensord(keys=["image", "label", "mask"]),
@@ -255,77 +254,79 @@ def training(name_directory, name_dir_model, type_training, norm, roi_size=(96, 
                 f"at epoch: {best_metric_epoch}"
             )
     torch.save(model.state_dict(), os.path.join(name_dir_model, "last_model.pth"))
-    plt.figure("train", (12, 6))
-    #dice loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss
-    plt.plot(x, y, "-", label="D_Training Loss")
-    torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
+    ## to decomment if you have enough data
+    # plt.figure("train", (12, 6))
+    # #dice loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss
+    # plt.plot(x, y, "-", label="D_Training Loss")
+    # torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="D_Validation Loss")
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/dice_training.png")
+    # torch.save((x, y), os.path.join(name_dir_model, "Dice_validationLoss.pth"))
+    # torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
+    # plt.close()
+    # # BCE loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss_dice
+    # plt.plot(x, y, "-", label="BCE_Training Loss")
+    # torch.save((x, y), os.path.join(name_dir_model, "BCE_trainingLoss.pth"))
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss_dice
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="BCE_Validation Loss")
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/BCE_training.png")
+    # torch.save((x, y), os.path.join(name_dir_model, "BCE_validationLoss.pth"))
+    # torch.save((x, y), os.path.join(name_dir_model, "BCE_trainingLoss.pth"))
+    # plt.close()
+    # # DBCE loss
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss_dice_frag
+    # plt.plot(x, y, "-", label="DBCE_Training Loss")
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss_dice_frag
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="DBCE_Validation Loss")
+    #
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/DBCE_training.png")
+    #
+    # torch.save((x, y), os.path.join(name_dir_model, "DBCE_validationLoss.pth"))
+    # torch.save((x, y), os.path.join(name_dir_model, "DBCE_trainingLoss.pth"))
+    # plt.close()
+    # # BCE loss et Dice loss séparées
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = training_loss
+    # plt.plot(x, y, "-", label="Dice Loss")
+    #
+    # x = [i + 1 for i in range(max_epochs)]
+    # y = validation_loss_dice
+    # plt.xlabel("epoch")
+    # plt.ylim(0, 1)
+    # plt.plot(x, y, ":", label="BCE Loss")
+    #
+    # plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
+    #            ncol=2, mode="expand", borderaxespad=0.)
+    # plt.savefig(name_dir_model + "/DBCE_separe_training.png")
+    # plt.close()
 
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="D_Validation Loss")
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/dice_training.png")
-    torch.save((x, y), os.path.join(name_dir_model, "Dice_validationLoss.pth"))
-    torch.save((x, y), os.path.join(name_dir_model, "Dice_trainingLoss.pth"))
-    plt.close()
-    # BCE loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss_dice
-    plt.plot(x, y, "-", label="BCE_Training Loss")
-    torch.save((x, y), os.path.join(name_dir_model, "BCE_trainingLoss.pth"))
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss_dice
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="BCE_Validation Loss")
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/BCE_training.png")
-    torch.save((x, y), os.path.join(name_dir_model, "BCE_validationLoss.pth"))
-    torch.save((x, y), os.path.join(name_dir_model, "BCE_trainingLoss.pth"))
-    plt.close()
-    # DBCE loss
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss_dice_frag
-    plt.plot(x, y, "-", label="DBCE_Training Loss")
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss_dice_frag
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="DBCE_Validation Loss")
-
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/DBCE_training.png")
-
-    torch.save((x, y), os.path.join(name_dir_model, "DBCE_validationLoss.pth"))
-    torch.save((x, y), os.path.join(name_dir_model, "DBCE_trainingLoss.pth"))
-    plt.close()
-    # BCE loss et Dice loss séparées
-    x = [i + 1 for i in range(max_epochs)]
-    y = training_loss
-    plt.plot(x, y, "-", label="Dice Loss")
-
-    x = [i + 1 for i in range(max_epochs)]
-    y = validation_loss_dice
-    plt.xlabel("epoch")
-    plt.ylim(0, 1)
-    plt.plot(x, y, ":", label="BCE Loss")
-
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left',
-               ncol=2, mode="expand", borderaxespad=0.)
-    plt.savefig(name_dir_model + "/DBCE_separe_training.png")
-    plt.close()
     training_config = {
         "type_training": type_training,
         "optimizer": "adam",

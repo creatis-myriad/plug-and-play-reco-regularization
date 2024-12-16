@@ -19,7 +19,7 @@ create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_max, 
 
 
 # Second step : once the dataset is created, we can train the model
-name_dir_model = "../../modeles/2D_model_cco"
+name_dir_model = "../../modeles/2D_model_cco_test"
 type_training = "reconnect_denoise"
 norm = "batch"
 training(new_dataset_directory, name_dir_model, type_training, norm, max_epochs=10)

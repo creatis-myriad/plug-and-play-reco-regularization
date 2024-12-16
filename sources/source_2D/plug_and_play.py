@@ -103,7 +103,7 @@ def reconnector_plug_and_play(image_path, tv_weight, model_directory_path, switc
     else:
         model.load_state_dict(torch.load(model_file, map_location="cpu"))
 
-    roi_size = parameters_training["roi_size"]
+    roi_size = parameters_training["patch_size"]
 
     image = image_utils.read_image(image_path)
 

@@ -7,10 +7,10 @@ from monai.config import KeysCollection
 from monai.utils import MAX_SEED, ensure_tuple
 from skimage.measure import label
 from glob import glob
-from monai.data import Dataset, DataLoader, write_nifti
+from monai.data import Dataset, DataLoader
 import torch
 from monai.transforms import (
-    AddChanneld,
+    EnsureChannelFirstd,
     Compose,
     LoadImaged,
     ScaleIntensityd,
@@ -121,7 +121,7 @@ def create_disconnections(image, nb_disconnection, size_max_deco = 8, nb_val_rad
     image = image_utils.normalize_image(image, 1)
 
     # getting the centerlines of the vascular network
-    skelet = image_utils.normalize_image(skeletonize(image), 1)
+    skelet = image_utils.normalize_image(skeletonize(image)*1.0, 1)
 
     # getting the radius of the blood vessel on the centerline
     distance_map = ndimage.distance_transform_bf(image, 'chessboard')
@@ -336,7 +336,7 @@ def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_m
             ScaleIntensityd(keys=["deco", "label", "label_art"]),
             BinaryDeconnect(keys=["deco"], nb_deco=nb_deco, size_max_deco=size_deco_max),
             AddArtefacts(keys=["deco", "label_art"], label="label", mean_artefacts=mean_artefacts, threshold=threshold),
-            AddChanneld(keys=["deco", "label", "label_art"]),
+            EnsureChannelFirstd(keys=["deco", "label", "label_art"], channel_dim='no_channel'),
             ToTensord(keys=["deco", "label", "label_art"]),
         ]
     )
@@ -346,13 +346,13 @@ def create_dataset(origin_directory, new_dataset_directory, nb_deco, size_deco_m
     for batch_data, i in zip(check_loader,  range(len(images))):
         print(f"---------------------------traitement du volume n°{i}-----------------------------")
         label, deco, label_art = batch_data["label"].to(device), batch_data["deco"].to(device), batch_data["label_art"].to(device)
-        write_nifti(data=label.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/label_{i}.nii.gz", resample=False)
-        write_nifti(data=deco.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/img_{i}.nii.gz", resample=False)
-        write_nifti(data=label_art.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/seg_{i}.nii.gz", resample=False)
+        image_utils.save_nifti(label.detach().cpu().squeeze().numpy(), f"{new_dataset_directory}/label_{i}.nii.gz")
+        image_utils.save_nifti(deco.detach().cpu().squeeze().numpy(), f"{new_dataset_directory}/img_{i}.nii.gz")
+        image_utils.save_nifti(label_art.detach().cpu().squeeze().numpy(), f"{new_dataset_directory}/seg_{i}.nii.gz")
         pos_deco = label_art - deco
         non_art_deco = label - pos_deco
-        write_nifti(data=non_art_deco.detach().cpu().squeeze().numpy(), file_name=f"{new_dataset_directory}/denoise_deconnected_{i}.nii.gz", resample=False)
+        image_utils.save_nifti(non_art_deco.detach().cpu().squeeze().numpy(), f"{new_dataset_directory}/denoise_deconnected_{i}.nii.gz")
         boule = ball(2)
         pos_deco = pos_deco.detach().cpu().squeeze().numpy()
-        pos_deco = binary_dilation(pos_deco, boule)
-        write_nifti(data=pos_deco, file_name=f"{new_dataset_directory}/pos_{i}.nii.gz", resample=False)
+        pos_deco = binary_dilation(pos_deco, boule)*1.0
+        image_utils.save_nifti(pos_deco, f"{new_dataset_directory}/pos_{i}.nii.gz")

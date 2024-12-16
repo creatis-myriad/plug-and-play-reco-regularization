@@ -35,21 +35,20 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL license and that you accept its terms.
 """
 import sys
-from skimage.color import rgb2grey
+from skimage.color import rgb2gray
 from skimage.filters import median
 from skimage.morphology import disk
 from skimage.morphology import binary_erosion
 sys.path.insert(0,"../../sources")
 from sources import image_utils
 import numpy as np
-import skimage
 
 def substract_background(image_path, mask_path, kernel_radius):
     image = image_utils.read_image(image_path)
     mask = image_utils.read_image(mask_path) * 1.0
     # Convert the image to grey level
-    grey_image = image_utils.normalize_image(rgb2grey(image))
-    mask = image_utils.normalize_image(rgb2grey(mask))
+    grey_image = image_utils.normalize_image(rgb2gray(image))
+    mask = image_utils.normalize_image(mask)
     print(grey_image.shape, mask.shape)
     # Invert the image to obtain white blood vessels
     grey_image = np.amax(grey_image) - grey_image
